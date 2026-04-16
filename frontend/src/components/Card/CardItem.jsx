@@ -3,6 +3,11 @@ import Avatar from "../common/Avatar";
 
 export default function CardItem({ card, index, onClick, dimmed = false }) {
   const isOverdue = card.due_date && new Date(card.due_date) < new Date();
+  const isUpcoming = card.due_date && !isOverdue;
+  const isUrgent = isUpcoming && (new Date(card.due_date) - new Date()) < 7 * 24 * 60 * 60 * 1000; // within 7 days
+
+  const dueBg = isOverdue ? "#FFEBE6" : isUrgent ? "#FFF7E6" : isUpcoming ? "#E9F2FF" : "rgba(9,30,66,0.07)";
+  const dueColor = isOverdue ? "#BF2600" : isUrgent ? "#A54800" : isUpcoming ? "#0055CC" : "#5e6c84";
 
   return (
     <Draggable draggableId={String(card.id)} index={index}>
@@ -69,8 +74,8 @@ export default function CardItem({ card, index, onClick, dimmed = false }) {
                       {card.due_date && (
                         <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap"
                           style={{
-                            backgroundColor: isOverdue ? "#FFEBE6" : "rgba(9,30,66,0.07)",
-                            color: isOverdue ? "#BF2600" : "#5e6c84",
+                            backgroundColor: dueBg,
+                            color: dueColor,
                           }}>
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" />

@@ -35,7 +35,7 @@ export default function BoardsPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--t-bg)" }}>
       {/* Top gradient accent behind navbar */}
-      <div style={{ background: "linear-gradient(180deg, rgba(38,132,255,0.10) 0%, transparent 100%)" }}>
+      <div style={{ background: "linear-gradient(180deg, rgba(38,132,255,0.10) 0%, transparent 100%)", position: "relative", zIndex: 20 }}>
         <Navbar>
           <MembersPanel />
         </Navbar>

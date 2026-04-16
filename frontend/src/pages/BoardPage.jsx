@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import { useBoard } from "../context/BoardContext";
 import ListColumn from "../components/List/ListColumn";
@@ -149,7 +149,10 @@ function cardMatchesFilter(card, filters) {
     if (!card.due_date) return false;
     const d = new Date(card.due_date), now = new Date();
     if (filters.due === "overdue" && d >= now) return false;
-    if (filters.due === "upcoming" && d < now) return false;
+    if (filters.due === "upcoming") {
+      // Upcoming = due in the future (not overdue)
+      if (d < now) return false;
+    }
   }
   return true;
 }
@@ -157,6 +160,7 @@ function cardMatchesFilter(card, filters) {
 /* ─── Main Component ──────────────────────────────── */
 export default function BoardPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { board, loading, fetchBoard, fetchUsers, users, addList, reorderLists, reorderCards } = useBoard();
 
   const refreshBoard = useCallback(() => fetchBoard(id), [id, fetchBoard]);
@@ -168,6 +172,10 @@ export default function BoardPage() {
   const [searchResults, setSearchResults] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [filters, setFilters] = useState({ labels: [], members: [], due: "" });
+  const [editingBoardTitle, setEditingBoardTitle] = useState(false);
+  const [boardTitle, setBoardTitle] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchBoard(id);
@@ -229,6 +237,32 @@ export default function BoardPage() {
 
   const boardBg = board?.background_color || "#0079BF";
 
+  /* ── Board Title Edit ────────────────────────── */
+  const startEditTitle = () => {
+    setBoardTitle(board.title);
+    setEditingBoardTitle(true);
+  };
+  const saveTitle = async () => {
+    setEditingBoardTitle(false);
+    if (boardTitle.trim() && boardTitle.trim() !== board.title) {
+      await api.updateBoard(id, { title: boardTitle.trim() });
+      refreshBoard();
+    }
+  };
+
+  /* ── Board Delete ────────────────────────────── */
+  const handleDeleteBoard = async () => {
+    setDeleting(true);
+    try {
+      await api.deleteBoard(id);
+      navigate("/");
+    } catch (err) {
+      console.error("Failed to delete board:", err);
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   /* ── Loading ─────────────────────────────────── */
   if (loading || !board) {
     return (
@@ -262,13 +296,49 @@ export default function BoardPage() {
           borderBottom: "1px solid rgba(255,255,255,0.12)",
         }}
       >
-        {/* Board title */}
-        <h1
-          className="font-bold text-base sm:text-lg text-white truncate flex-1 min-w-0 py-2"
-          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
-        >
-          {board.title}
-        </h1>
+        {/* Board title (editable) */}
+        {editingBoardTitle ? (
+          <input
+            autoFocus
+            value={boardTitle}
+            onChange={(e) => setBoardTitle(e.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(e) => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") setEditingBoardTitle(false); }}
+            className="font-bold text-base sm:text-lg text-white flex-1 min-w-0 py-1.5 px-2 rounded-md focus:outline-none"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.22)",
+              textShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              border: "2px solid rgba(255,255,255,0.5)",
+            }}
+          />
+        ) : (
+          <h1
+            className="font-bold text-base sm:text-lg text-white truncate flex-1 min-w-0 py-2 cursor-pointer rounded-md px-2 -ml-2 transition-colors"
+            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+            onClick={startEditTitle}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.12)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            title="Click to rename board"
+          >
+            {board.title}
+          </h1>
+        )}
+
+        {/* Board menu (delete) */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            title="Delete board"
+            className="flex items-center justify-center w-8 h-8 rounded-md transition-colors"
+            style={{ color: "rgba(255,255,255,0.7)", backgroundColor: "transparent" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
+        </div>
 
         {/* Right-side controls — wrap on small screens */}
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end py-1">
@@ -469,6 +539,62 @@ export default function BoardPage() {
           boardId={id}
           onClose={() => setSelectedCard(null)}
         />
+      )}
+
+      {/* ── Delete Board Confirmation ────────────── */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center animate-modal-fade"
+          style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+          onClick={(e) => e.target === e.currentTarget && setShowDeleteConfirm(false)}
+        >
+          <div
+            className="rounded-2xl shadow-2xl animate-slide-up w-full max-w-sm mx-4 overflow-hidden"
+            style={{ backgroundColor: "#fff" }}
+          >
+            {/* Header */}
+            <div style={{ padding: "20px 24px 0" }}>
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "rgba(231,76,60,0.12)" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" strokeWidth="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold" style={{ color: "#172b4d" }}>Delete Board</h3>
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: "#626f86" }}>
+                Are you sure you want to delete <strong style={{ color: "#172b4d" }}>"{board.title}"</strong>?
+                This will permanently remove all lists, cards, and data in this board. This action cannot be undone.
+              </p>
+            </div>
+            {/* Actions */}
+            <div className="flex gap-3 p-5 pt-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 text-sm py-2.5 rounded-lg font-semibold transition-colors"
+                style={{ color: "#626f86", backgroundColor: "rgba(9,30,66,0.06)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(9,30,66,0.13)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(9,30,66,0.06)")}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteBoard}
+                disabled={deleting}
+                className="flex-1 text-sm py-2.5 rounded-lg font-semibold text-white transition-colors"
+                style={{ backgroundColor: deleting ? "#ccc" : "#e74c3c" }}
+                onMouseEnter={(e) => !deleting && (e.currentTarget.style.backgroundColor = "#c0392b")}
+                onMouseLeave={(e) => !deleting && (e.currentTarget.style.backgroundColor = "#e74c3c")}
+              >
+                {deleting ? "Deleting…" : "Delete Board"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
