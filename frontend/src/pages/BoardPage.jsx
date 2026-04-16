@@ -5,6 +5,7 @@ import { useBoard } from "../context/BoardContext";
 import ListColumn from "../components/List/ListColumn";
 import CardDetailModal from "../components/Card/CardDetailModal";
 import Navbar from "../components/common/Navbar";
+import MembersPanel from "../components/common/MembersPanel";
 import * as api from "../api";
 
 /* ─── Filter Popover ────────────────────────────── */
@@ -157,6 +158,8 @@ function cardMatchesFilter(card, filters) {
 export default function BoardPage() {
   const { id } = useParams();
   const { board, loading, fetchBoard, fetchUsers, users, addList, reorderLists, reorderCards } = useBoard();
+
+  const refreshBoard = useCallback(() => fetchBoard(id), [id, fetchBoard]);
 
   const [selectedCard, setSelectedCard] = useState(null);
   const [addingList, setAddingList] = useState(false);
@@ -350,7 +353,7 @@ export default function BoardPage() {
 
           {/* Board member avatars */}
           {board.members?.length > 0 && (
-            <div className="flex -space-x-1.5 flex-shrink-0">
+            <div className="flex -space-x-1.5 flex-shrink-0" style={{ marginRight: 4 }}>
               {board.members.slice(0, 5).map((m) => (
                 <img
                   key={m.user.id}
@@ -371,6 +374,13 @@ export default function BoardPage() {
               )}
             </div>
           )}
+
+          {/* Members management panel */}
+          <MembersPanel
+            boardId={Number(id)}
+            boardMembers={board.members}
+            onBoardMembersChange={refreshBoard}
+          />
         </div>
       </div>
 

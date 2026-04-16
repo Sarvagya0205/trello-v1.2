@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useBoard } from "../context/BoardContext";
 import * as api from "../api";
 import Navbar from "../components/common/Navbar";
+import MembersPanel from "../components/common/MembersPanel";
 
 const BOARD_COLORS = [
   "#0052CC", "#5243AA", "#00875A", "#DE350B",
@@ -35,7 +36,9 @@ export default function BoardsPage() {
     <div className="min-h-screen" style={{ backgroundColor: "var(--t-bg)" }}>
       {/* Top gradient accent behind navbar */}
       <div style={{ background: "linear-gradient(180deg, rgba(38,132,255,0.10) 0%, transparent 100%)" }}>
-        <Navbar />
+        <Navbar>
+          <MembersPanel />
+        </Navbar>
       </div>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">

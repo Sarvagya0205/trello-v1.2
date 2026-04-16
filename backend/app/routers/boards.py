@@ -101,3 +101,33 @@ def delete_board_label(board_id: int, label_id: int, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Label not found")
     db.delete(label)
     db.commit()
+
+
+# ── Board Members ────────────────────────────────────────────
+from app.models.user import User
+
+
+@router.post("/{board_id}/members/{user_id}", status_code=204)
+def add_board_member(board_id: int, user_id: int, db: Session = Depends(get_db)):
+    board = db.query(Board).filter(Board.id == board_id).first()
+    if not board:
+        raise HTTPException(status_code=404, detail="Board not found")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    exists = db.query(BoardMember).filter(
+        BoardMember.board_id == board_id, BoardMember.user_id == user_id
+    ).first()
+    if not exists:
+        db.add(BoardMember(board_id=board_id, user_id=user_id, role="member"))
+        db.commit()
+
+
+@router.delete("/{board_id}/members/{user_id}", status_code=204)
+def remove_board_member(board_id: int, user_id: int, db: Session = Depends(get_db)):
+    member = db.query(BoardMember).filter(
+        BoardMember.board_id == board_id, BoardMember.user_id == user_id
+    ).first()
+    if member:
+        db.delete(member)
+        db.commit()

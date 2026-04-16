@@ -39,5 +39,11 @@ export const updateChecklistItem = (id, data) => api.patch(`/api/checklist-items
 export const deleteChecklistItem = (id) => api.delete(`/api/checklist-items/${id}`);
 
 export const getUsers = () => api.get("/api/users");
+export const createUser = (data) => api.post("/api/users", data);
+export const updateUser = (id, data) => api.patch(`/api/users/${id}`, data);
+export const deleteUser = (id) => api.delete(`/api/users/${id}`);
+
+export const addBoardMember = (boardId, userId) => api.post(`/api/boards/${boardId}/members/${userId}`);
+export const removeBoardMember = (boardId, userId) => api.delete(`/api/boards/${boardId}/members/${userId}`);
 
 export const searchCards = (boardId, params) => api.get(`/api/boards/${boardId}/search`, { params });

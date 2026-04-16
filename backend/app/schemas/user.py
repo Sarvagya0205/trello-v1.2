@@ -13,6 +13,12 @@ class UserCreate(UserBase):
     pass
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+
 class UserOut(UserBase):
     id: int
     created_at: datetime

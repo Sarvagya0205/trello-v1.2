@@ -41,7 +41,7 @@ export default function Navbar({ children }) {
 
       {children && (
         <>
-          <div className="w-px h-5 flex-shrink-0" style={{ backgroundColor: "rgba(255,255,255,0.16)" }} />
+          <div className="flex-1" />
           {children}
         </>
       )}
