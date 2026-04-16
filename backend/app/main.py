@@ -2,11 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.routers import boards, lists, cards, checklists, search, users
+from app.seed import seed
 
 # Import all models so SQLAlchemy registers them before create_all
 import app.models  # noqa: F401
 
 Base.metadata.create_all(bind=engine)
+
+# Auto-seed on startup (skips if data already exists)
+seed()
 
 app = FastAPI(title="Trello Clone API", version="1.0.0")
 
