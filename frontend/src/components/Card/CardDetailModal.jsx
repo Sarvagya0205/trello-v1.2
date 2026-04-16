@@ -33,7 +33,10 @@ function SidebarBtn({ children, onClick, danger }) {
 
 /* ─── Main component ──────────────────────────────── */
 export default function CardDetailModal({ card, boardId, onClose }) {
-  const { editCard, removeCard, users } = useBoard();
+  const { editCard, removeCard, board } = useBoard();
+
+  // Get board members (users who are members of this board)
+  const boardUsers = (board?.members || []).map((m) => m.user).filter(Boolean);
 
   const [data,              setData]              = useState(card);
   const [labels,            setLabels]            = useState([]);
@@ -46,6 +49,7 @@ export default function CardDetailModal({ card, boardId, onClose }) {
   const [creatingLabel,     setCreatingLabel]     = useState(false);
   const [newLabelName,      setNewLabelName]      = useState("");
   const [newLabelColor,     setNewLabelColor]     = useState("#0052CC");
+  const [memberSearch,      setMemberSearch]      = useState("");
 
   const LABEL_COLORS = ["#0052CC","#00875A","#DE350B","#FF8B00","#6554C0","#00B8D9","#36B37E","#FF5630","#C62828","#E91E63"];
 
@@ -374,8 +378,35 @@ export default function CardDetailModal({ card, boardId, onClose }) {
                       {data.members.map((m) => <Avatar key={m.id} user={m} size="md" />)}
                     </div>
                   )}
-                  <div className="space-y-0.5">
-                    {users.map((u) => {
+                  {/* Member search */}
+                  {boardUsers.length > 3 && (
+                    <div style={{ position: "relative", marginBottom: 6 }}>
+                      <svg
+                        style={{ position: "absolute", left: 7, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+                        width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#8c9bab" strokeWidth="2.5"
+                      >
+                        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                      </svg>
+                      <input
+                        value={memberSearch}
+                        onChange={(e) => setMemberSearch(e.target.value)}
+                        placeholder="Search…"
+                        className="w-full text-xs rounded-md py-1.5 pr-2 focus:outline-none"
+                        style={{
+                          paddingLeft: 24, backgroundColor: "#f8f9fa", color: "#172b4d",
+                          border: "1px solid #dfe1e6",
+                        }}
+                      />
+                    </div>
+                  )}
+                  {/* Scrollable member list */}
+                  <div className="space-y-0.5" style={{ maxHeight: 200, overflowY: "auto" }}>
+                    {boardUsers.length === 0 && (
+                      <p className="text-xs italic" style={{ color: "#8c9bab" }}>No board members</p>
+                    )}
+                    {boardUsers
+                      .filter((u) => !memberSearch || u.name.toLowerCase().includes(memberSearch.toLowerCase()))
+                      .map((u) => {
                       const assigned = data.members?.find((m) => m.id === u.id);
                       return (
                         <button
