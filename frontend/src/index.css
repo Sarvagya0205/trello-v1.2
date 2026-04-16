@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Reset ─────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ─── Design tokens ──────────────────────────────── */
+:root {
+  /* Dark home screen */
+  --t-bg:        #13151a;
+  --t-surface:   #1e2228;
+  --t-hover:     #262d36;
+  --t-border:    rgba(99, 152, 211, 0.14);
+  --t-text:      #d8dde4;
+  --t-subtle:    #7d8998;
+  --t-blue:      #2684ff;
+  --t-blue-h:    #4c9aff;
+
+  /* Board / card canvas */
+  --t-card:      #ffffff;
+  --t-list:      #f0f1f4;
+  --t-list-text: #172b4d;
+  --t-card-meta: #5e6c84;
+
+  --navbar-h:    48px;
+}
+
+/* ─── Base ───────────────────────────────────────── */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--t-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
+}
+
+/* ─── Scrollbars ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.40);
+}
+
+/* Board canvas scrollbar (white-on-color) */
+.board-canvas::-webkit-scrollbar {
+  height: 10px;
+}
+
+.board-canvas::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  margin: 0 12px;
+}
+
+.board-canvas::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.30);
+  border-radius: 6px;
+}
+
+.board-canvas::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.50);
+}
+
+/* ─── Animations ─────────────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.16s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.20s ease-out both;
+}
+
+.animate-modal-fade {
+  animation: modalFade 0.16s ease-out both;
+}
+
+.animate-pop-in {
+  animation: popIn 0.14s ease-out both;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ─── Board card hover sheen ─────────────────────── */
+.board-card {
+  position: relative;
+  overflow: hidden;
+}
+.board-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255,255,255,0.12) 50%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  background-position: 200% 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+}
+.board-card:hover::before {
+  opacity: 1;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+/* ─── List column sizing ─────────────────────────── */
+/* Fixed readable width — lists wrap to next row when space runs out */
+.list-col {
+  width: 272px;
+  min-width: 272px;
+  max-width: 272px;
+}
+
+/* On very small screens, list takes full width so it's readable */
+@media (max-width: 320px) {
+  .list-col {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* ─── Input placeholders ─────────────────────────── */
+input::placeholder,
+textarea::placeholder {
+  color: #8c9bab;
+}
+
+/* Board search has white placeholder */
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ─── Focus ring ─────────────────────────────────── */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--t-blue);
+  outline-offset: 1px;
+}
